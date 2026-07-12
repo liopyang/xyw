@@ -17,6 +17,7 @@ const auth = useAuthStore()
 const loading = ref(false)
 const exportingBatch = ref(false)
 const exportingId = ref<number>()
+const togglingAuditId = ref<number>()
 const searchVisible = ref(false)
 const searchInput = ref<HTMLInputElement>()
 const orders = ref<Order[]>([])
@@ -135,6 +136,18 @@ async function action(kind: 'confirm' | 'void' | 'restore', row: Order) {
   load()
 }
 
+async function toggleAuditStatus(row: Order) {
+  if (row.deleted || togglingAuditId.value !== undefined) return
+  togglingAuditId.value = row.id
+  try {
+    await orderApi.toggleAuditStatus(row.id)
+    ElMessage.success(row.auditStatus === 'PENDING' ? '订单已确认' : '订单已改为待确认')
+    await load()
+  } finally {
+    togglingAuditId.value = undefined
+  }
+}
+
 function downloadBlob(blob: Blob, fileName: string) {
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
@@ -187,7 +200,7 @@ async function exportExcel() {
 async function exportOne(row: Order) {
   exportingId.value = row.id
   try {
-    const blob = await orderApi.exportNetwork({ orderId: row.id })
+    const blob = await orderApi.exportNetwork({ orderId: row.id, exportStatus: row.exportStatus })
     downloadBlob(blob, `校园网订单_${row.orderNo}.xlsx`)
     ElMessage.success('该订单已导出')
     await load()
@@ -276,20 +289,30 @@ onMounted(() => {
         <el-table-column prop="businessNumber" label="业务号码" min-width="125" show-overflow-tooltip />
         <el-table-column label="来源" width="78"><template #default="{ row }">{{ sourceNames[row.sourceChannel as keyof typeof sourceNames] }}</template></el-table-column>
         <el-table-column prop="agentName" label="归属代理" width="100"><template #default="{ row }">{{ row.agentName || '-' }}</template></el-table-column>
-        <el-table-column label="审核状态" width="96"><template #default="{ row }"><el-tag :type="row.auditStatus === 'CONFIRMED' ? 'success' : 'warning'">{{ row.auditStatus === 'CONFIRMED' ? '已确认' : '待确认' }}</el-tag></template></el-table-column>
+        <el-table-column label="审核状态" width="96">
+          <template #default="{ row }">
+            <el-button
+              size="small"
+              :type="row.auditStatus === 'CONFIRMED' ? 'success' : 'warning'"
+              plain
+              :disabled="row.deleted || togglingAuditId !== undefined"
+              :loading="togglingAuditId === row.id"
+              class="status-button"
+              @click="toggleAuditStatus(row)"
+            >{{ row.auditStatus === 'CONFIRMED' ? '已确认' : '待确认' }}</el-button>
+          </template>
+        </el-table-column>
         <el-table-column v-if="networkMode" label="导出状态" width="110" fixed="right">
           <template #default="{ row }">
             <el-button
-              v-if="row.exportStatus === 'NOT_EXPORTED'"
               size="small"
-              type="danger"
+              :type="row.exportStatus === 'NOT_EXPORTED' ? 'danger' : 'info'"
               plain
-              :disabled="row.auditStatus !== 'CONFIRMED' || row.deleted || exportingId !== undefined"
+              :disabled="row.deleted || exportingId !== undefined"
               :loading="exportingId === row.id"
-              :class="['export-tag', { 'is-disabled': row.auditStatus !== 'CONFIRMED' || row.deleted, 'is-loading': exportingId === row.id }]"
+              :class="['export-tag', { 'is-disabled': row.deleted, 'is-loading': exportingId === row.id }]"
               @click="exportOne(row)"
-            >未导出</el-button>
-            <el-tag v-else type="info">已导出</el-tag>
+            >{{ row.exportStatus === 'NOT_EXPORTED' ? '未导出' : '已导出' }}</el-button>
           </template>
         </el-table-column>
         <el-table-column prop="createdAt" label="创建时间 ↓" width="168" />
@@ -326,4 +349,5 @@ onMounted(() => {
 }
 .export-tag.is-disabled { cursor: not-allowed; opacity: .65; }
 .export-tag.is-loading { cursor: wait; opacity: .65; }
+.status-button { min-width: 68px; }
 </style>

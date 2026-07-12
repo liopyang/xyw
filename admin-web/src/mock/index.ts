@@ -47,10 +47,13 @@ export const mockAdapter:AxiosAdapter=async config=>{
     const page=Number(p.page||1),pageSize=Number(p.pageSize||20),total=rows.length;rows=rows.slice((page-1)*pageSize,page*pageSize);return ok(config,{records:rows,total,page,pageSize})
   }
   if(path?.match(/^\/orders\/\d+$/)&&method==='get'){const row=orders.find(o=>o.id===Number(path.split('/').pop()));return ok(config,row?{...row,name:row.name,phone:row.phone}:null)}
+  const auditMatch=path?.match(/^\/orders\/(\d+)\/audit-status\/toggle$/)
+  if(auditMatch){const row=orders.find(o=>o.id===Number(auditMatch[1]));if(row)row.auditStatus=row.auditStatus==='CONFIRMED'?'PENDING':'CONFIRMED';return ok(config,null)}
   const match=path?.match(/^\/orders\/(\d+)(?:\/(confirm|restore))?$/)
   if(match){const row=orders.find(o=>o.id===Number(match[1]));if(row){if(match[2]==='confirm')row.auditStatus='CONFIRMED';else if(match[2]==='restore')row.deleted=false;else if(method==='delete')row.deleted=true}return ok(config,null)}
   if(path==='/orders/campus-network/export'){
     const p=config.params||{},orderId=Number(p.orderId||0)
+    if(orderId){const row=orders.find(o=>o.id===orderId);if(row)row.auditStatus='CONFIRMED'}
     const rows=orders.filter(o=>o.businessType==='CAMPUS_NETWORK'&&!o.deleted&&o.auditStatus==='CONFIRMED'&&(!orderId||o.id===orderId)&&(!p.sourceChannel||o.sourceChannel===p.sourceChannel)&&(!p.agentId||o.agentId===Number(p.agentId))&&(!p.exportStatus||o.exportStatus===p.exportStatus)&&(!p.startTime||o.createdAt.slice(0,10)>=p.startTime)&&(!p.endTime||o.createdAt.slice(0,10)<=p.endTime))
     const workbook=new ExcelJS.Workbook(),sheet=workbook.addWorksheet('校园网订单')
     sheet.columns=[{header:'姓名',key:'name',width:14},{header:'联系电话',key:'phone',width:18},{header:'新办号码',key:'businessNumber',width:18},{header:'学号',key:'studentNo',width:18},{header:'身份证后六位',key:'idSuffix',width:18}]

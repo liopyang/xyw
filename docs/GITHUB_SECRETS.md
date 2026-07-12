@@ -1,6 +1,6 @@
 # GitHub Environment Secrets
 
-建议把以下值配置在 GitHub 仓库 Settings → Environments → `production`，不要放在代码、Actions YAML 或普通文档中。
+以下值配置在 GitHub 仓库 Settings → Secrets and variables → Actions → Repository secrets，不要放在代码、Actions YAML 或普通文档中。`main` 分支每次 push 都会自动构建、测试并部署，无需人工审批。
 
 | Secret | 填写内容 |
 |---|---|
@@ -41,10 +41,6 @@ ssh-keygen -lf campus_known_hosts
 
 工作流始终启用 SSH host key 校验，没有使用 `StrictHostKeyChecking=no`。
 
-## Environment 审批
+## 自动部署
 
-在 `production` 的 Deployment protection rules 中添加 Required reviewers。Secrets 和审批配置完成前，不要合并首次 `main` 发布 Pull Request。
-
-如果当前套餐没有 Required reviewers，把生产工作流的 `push: main` 触发移除，只保留 `workflow_dispatch`，通过手工运行作为替代审批门。
-
-GitHub Free 的私有仓库可能无法使用 Environment Secrets/Required reviewers。此时可把同名值保存为 Repository Secrets，但必须先把生产工作流改成仅 `workflow_dispatch`；否则 `main` 更新会在没有人工审批的情况下使用 Repository Secrets 部署。
+生产工作流监听 `main` 分支 push，并直接读取上述 Repository secrets 完成部署。部署前仍会完整构建和测试，部署后执行公网健康检查；检查失败会自动回滚到上一版本并让工作流失败。

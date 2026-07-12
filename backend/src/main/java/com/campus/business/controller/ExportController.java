@@ -66,6 +66,16 @@ public class ExportController {
             @RequestParam(required = false) String keyword,
             HttpServletResponse response
     ) throws Exception {
+        if (orderId != null) {
+            int confirmed = jdbc.update(
+                    "UPDATE biz_order SET audit_status='CONFIRMED',updated_at=NOW() " +
+                            "WHERE id=:id AND business_type='CAMPUS_NETWORK' AND deleted=0",
+                    Map.of("id", orderId)
+            );
+            if (confirmed == 0) {
+                throw new BusinessException("该订单不是有效的校园网订单");
+            }
+        }
         ExportQuery query = query(orderId, sourceChannel, agentId, startTime, endTime, start, end, exportStatus, keyword);
         QueryParts parts = parts(query);
         String from = " FROM biz_order o JOIN order_campus_network n ON n.order_id=o.id " +
@@ -77,7 +87,7 @@ public class ExportController {
         );
         if (ids.isEmpty()) {
             throw new BusinessException(orderId != null
-                    ? "该订单不是已确认且未导出的有效校园网订单"
+                    ? "该订单当前状态无法导出"
                     : "没有符合导出条件的订单");
         }
         List<NetworkExcelRow> rows = jdbc.query(

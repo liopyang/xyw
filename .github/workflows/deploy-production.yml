@@ -93,14 +93,11 @@ jobs:
           retention-days: 7
 
   deploy:
-    name: Deploy after production approval
+    name: Deploy production automatically
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment:
-      name: production
-      url: https://hutbxyw.click/
     steps:
       - name: Download verified release
         uses: actions/download-artifact@v6

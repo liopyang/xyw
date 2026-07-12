@@ -197,6 +197,18 @@ public class OrderController {
         return ApiResponse.ok();
     }
 
+    @PostMapping("/{id}/audit-status/toggle")
+    @Transactional
+    public ApiResponse<Void> toggleAuditStatus(@PathVariable Long id) {
+        BizOrder order = required(id);
+        String nextStatus = "CONFIRMED".equals(order.getAuditStatus()) ? "PENDING" : "CONFIRMED";
+        order.setAuditStatus(nextStatus);
+        mapper.updateById(order);
+        logs.record("ORDER", "AUDIT_STATUS", id,
+                ("CONFIRMED".equals(nextStatus) ? "确认订单 " : "订单改为待确认 ") + order.getOrderNo());
+        return ApiResponse.ok();
+    }
+
     @DeleteMapping("/{id}")
     public ApiResponse<Void> voidOrder(@PathVariable Long id) {
         int updated = jdbc.update(

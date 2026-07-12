@@ -41,6 +41,7 @@ export const orderApi = {
   create: (data: OrderPayload) => request.post<never, ApiResponse<{ id: number }>>('/orders', data),
   update: (id: number, data: OrderPayload) => request.put(`/orders/${id}`, data),
   confirm: (id: number) => request.post(`/orders/${id}/confirm`),
+  toggleAuditStatus: (id: number) => request.post(`/orders/${id}/audit-status/toggle`),
   void: (id: number) => request.delete(`/orders/${id}`),
   restore: (id: number) => request.post(`/orders/${id}/restore`),
   exportableNetworkCount: (params: Partial<NetworkExportFilters>) =>
