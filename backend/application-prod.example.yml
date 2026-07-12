@@ -1,0 +1,17 @@
+# Copy this file outside the Git repository or provide the same values through
+# environment variables. Never commit production passwords or JWT secrets.
+server:
+  address: 127.0.0.1
+  port: 18080
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+campus:
+  upload-dir: ${CAMPUS_UPLOAD_DIR:/opt/campus-business/uploads}
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}

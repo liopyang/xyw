@@ -1,0 +1,70 @@
+# Operating systems and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs and temporary files
+*.log
+logs/
+tmp/
+temp/
+work/
+outputs/
+*.tmp
+*.bak
+
+# Environment and production-only configuration
+.env
+.env.*
+!.env.example
+!**/.env.example
+application-prod.yml
+application-prod.yaml
+application-secret.yml
+application-secret.yaml
+!application-prod.example.yml
+
+# Java / Maven
+**/target/
+*.jar
+*.war
+
+# Node / Vue / uni-app
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/coverage/
+**/unpackage/
+*.local
+
+# Runtime data and uploads
+uploads/
+**/uploads/
+runtime/
+storage/
+backups/
+*.sql.gz
+*.dump
+
+# Certificates, private keys and SSH material
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+known_hosts
+*known_hosts*
+campus_github_deploy*
+
+# Local deployment artifacts
+incoming/
+releases/
+CURRENT_RELEASE

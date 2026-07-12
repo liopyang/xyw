@@ -1,0 +1,180 @@
+name: Build and deploy production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: campus-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Verify and build release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      JWT_SECRET: ci-only-secret-at-least-32-bytes-long
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Test and package backend
+        working-directory: backend
+        run: ./mvnw --batch-mode --no-transfer-progress clean verify
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.19.0'
+          cache: npm
+          cache-dependency-path: |
+            admin-web/package-lock.json
+            miniapp/package-lock.json
+
+      - name: Install and verify admin web
+        working-directory: admin-web
+        run: |
+          npm ci
+          npm run type-check
+          npm run build
+
+      - name: Install and verify WeChat miniapp
+        working-directory: miniapp
+        run: |
+          npm ci
+          npm run type-check
+          npm run build:mp-weixin
+
+      - name: Assemble release artifacts
+        run: |
+          set -Eeuo pipefail
+          release_dir="$RUNNER_TEMP/campus-release"
+          mkdir -p "$release_dir"
+
+          jar_path="$(find backend/target -maxdepth 1 -type f -name 'campus-business-backend-*.jar' -print -quit)"
+          test -n "$jar_path"
+          jar_size="$(stat -c '%s' "$jar_path")"
+          test "$jar_size" -ge 10485760
+          test "$jar_size" -le 209715200
+          cp "$jar_path" "$release_dir/backend.jar"
+
+          test -s admin-web/dist/index.html
+          test -d admin-web/dist/assets
+          test -n "$(find admin-web/dist/assets -type f -name '*.js' -print -quit)"
+          test -n "$(find admin-web/dist/assets -type f -name '*.css' -print -quit)"
+          tar -czf "$release_dir/admin-dist.tar.gz" -C admin-web/dist .
+
+          test -s miniapp/dist/build/mp-weixin/app.json
+          printf 'COMMIT_SHA=%s\nBUILT_AT=%s\n' "$GITHUB_SHA" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" > "$release_dir/release.env"
+          (cd "$release_dir" && sha256sum backend.jar admin-dist.tar.gz release.env > checksums.sha256)
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: campus-production-${{ github.sha }}
+          path: ${{ runner.temp }}/campus-release/
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    name: Deploy after production approval
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://hutbxyw.click/
+    steps:
+      - name: Download verified release
+        uses: actions/download-artifact@v6
+        with:
+          name: campus-production-${{ github.sha }}
+          path: ${{ runner.temp }}/campus-release
+
+      - name: Configure verified SSH connection
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.PROD_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts"
+
+      - name: Upload release to incoming directory
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_PORT: ${{ secrets.PROD_PORT }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+        run: |
+          set -Eeuo pipefail
+          remote_dir="/opt/campus-business/incoming/$GITHUB_SHA"
+          ssh -i "$HOME/.ssh/deploy_key" -p "$PROD_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" "$PROD_USER@$PROD_HOST" "mkdir -p '$remote_dir' && chmod 700 '$remote_dir'"
+          scp -i "$HOME/.ssh/deploy_key" -P "$PROD_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$RUNNER_TEMP/campus-release/backend.jar" \
+            "$RUNNER_TEMP/campus-release/admin-dist.tar.gz" \
+            "$RUNNER_TEMP/campus-release/release.env" \
+            "$RUNNER_TEMP/campus-release/checksums.sha256" \
+            "$PROD_USER@$PROD_HOST:$remote_dir/"
+
+      - name: Run reviewed server deployment script
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_PORT: ${{ secrets.PROD_PORT }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+        run: |
+          ssh -i "$HOME/.ssh/deploy_key" -p "$PROD_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" "$PROD_USER@$PROD_HOST" \
+            "sudo /opt/campus-business/scripts/deploy.sh '$GITHUB_SHA'"
+
+      - name: Verify public endpoints
+        id: public_health
+        continue-on-error: true
+        run: |
+          set -Eeuo pipefail
+          homepage="$(curl --fail --show-error --silent --location --retry 5 --retry-delay 2 https://hutbxyw.click/)"
+          test -n "$homepage"
+          grep -q '<div id="app"></div>' <<< "$homepage"
+          health="$(curl --fail --show-error --silent --retry 5 --retry-delay 2 https://hutbxyw.click/api/actuator/health)"
+          grep -q '"status":"UP"' <<< "$health"
+
+      - name: Roll back when runner-side public health check fails
+        if: steps.public_health.outcome == 'failure'
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_PORT: ${{ secrets.PROD_PORT }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+        run: |
+          ssh -i "$HOME/.ssh/deploy_key" -p "$PROD_PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" "$PROD_USER@$PROD_HOST" \
+            "sudo /opt/campus-business/scripts/rollback.sh"
+
+      - name: Fail deployment after automatic rollback
+        if: steps.public_health.outcome == 'failure'
+        run: |
+          echo "Runner-side public health check failed; the previous release was restored."
+          exit 1
+
+      - name: Record deployed commit
+        run: |
+          printf '### Production deployment\n\n- Commit: `%s`\n- URL: https://hutbxyw.click/\n' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove temporary SSH key
+        if: always()
+        run: rm -f "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts"

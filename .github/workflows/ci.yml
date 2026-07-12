@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - dev
+      - 'feature/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      JWT_SECRET: ci-only-secret-at-least-32-bytes-long
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Verify Maven wrapper
+        run: test -x mvnw && test -f .mvn/wrapper/maven-wrapper.properties
+
+      - name: Compile, test and package
+        run: ./mvnw --batch-mode --no-transfer-progress clean verify
+
+      - name: Verify backend artifact
+        run: test -n "$(find target -maxdepth 1 -type f -name 'campus-business-backend-*.jar' -print -quit)"
+
+  admin-web:
+    name: Admin web verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: admin-web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.19.0'
+          cache: npm
+          cache-dependency-path: admin-web/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Build admin web
+        run: npm run build
+
+      - name: Verify admin artifact
+        run: |
+          test -s dist/index.html
+          test -d dist/assets
+          test -n "$(find dist/assets -type f -name '*.js' -print -quit)"
+          test -n "$(find dist/assets -type f -name '*.css' -print -quit)"
+
+  miniapp:
+    name: WeChat miniapp verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: miniapp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.19.0'
+          cache: npm
+          cache-dependency-path: miniapp/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Build WeChat miniapp
+        run: npm run build:mp-weixin
+
+      - name: Verify miniapp artifact
+        run: |
+          test -s dist/build/mp-weixin/app.json
+          test -s dist/build/mp-weixin/project.config.json
