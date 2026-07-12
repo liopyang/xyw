@@ -132,7 +132,7 @@ jobs:
             "$RUNNER_TEMP/campus-release/checksums.sha256" \
             "$PROD_USER@$PROD_HOST:$remote_dir/"
 
-      - name: Run reviewed server deployment script
+      - name: Run server deployment script
         env:
           PROD_HOST: ${{ secrets.PROD_HOST }}
           PROD_PORT: ${{ secrets.PROD_PORT }}

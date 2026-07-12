@@ -122,7 +122,7 @@ validate_incoming_release() {
   archive_size="$(stat -c '%s' "$incoming_dir/admin-dist.tar.gz")"
   (( jar_size >= 10485760 && jar_size <= 209715200 )) || fail "backend JAR size is outside the allowed range"
   (( archive_size >= 102400 && archive_size <= 104857600 )) || fail "frontend archive size is outside the allowed range"
-  jar tf "$incoming_dir/backend.jar" >/dev/null
+  unzip -tqq "$incoming_dir/backend.jar" >/dev/null
 
   if tar -tzf "$incoming_dir/admin-dist.tar.gz" \
     | awk '$0 ~ /^\// || $0 ~ /(^|\/)\.\.(\/|$)/ { found=1 } END { exit(found ? 0 : 1) }'; then
