@@ -11,15 +11,15 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class JdbcInsertService {
-    private final NamedParameterJdbcTemplate jdbc;
+  private final NamedParameterJdbcTemplate jdbc;
 
-    public long insert(String sql, SqlParameterSource parameters) {
-        KeyHolder keys = new GeneratedKeyHolder();
-        jdbc.update(sql, parameters, keys, new String[]{"id"});
-        Number key = keys.getKey();
-        if (key == null) {
-            throw new BusinessException("数据保存失败");
-        }
-        return key.longValue();
+  public long insert(String sql, SqlParameterSource parameters) {
+    KeyHolder keys = new GeneratedKeyHolder();
+    jdbc.update(sql, parameters, keys, new String[] {"id"});
+    Number key = keys.getKey();
+    if (key == null) {
+      throw new BusinessException("数据保存失败");
     }
+    return key.longValue();
+  }
 }

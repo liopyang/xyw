@@ -26,6 +26,17 @@ mybatis-plus:
       logic-not-delete-value: 0
 campus:
   upload-dir: ${CAMPUS_UPLOAD_DIR:uploads}
+  wechat:
+    app-id: ${WECHAT_APP_ID:}
+    app-secret: ${WECHAT_APP_SECRET:}
+  map:
+    baidu-ak: ${BAIDU_MAP_AK:}
+  object-storage:
+    endpoint: ${OBJECT_STORAGE_ENDPOINT:}
+    region: ${OBJECT_STORAGE_REGION:cn-east-1}
+    bucket: ${OBJECT_STORAGE_BUCKET:}
+    access-key: ${OBJECT_STORAGE_ACCESS_KEY:}
+    secret-key: ${OBJECT_STORAGE_SECRET_KEY:}
   jwt:
     secret: ${JWT_SECRET}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}

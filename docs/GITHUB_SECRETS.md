@@ -2,13 +2,13 @@
 
 以下值配置在 GitHub 仓库 Settings → Secrets and variables → Actions → Repository secrets，不要放在代码、Actions YAML 或普通文档中。`main` 分支每次 push 都会自动构建、测试并部署，无需人工审批。
 
-| Secret | 填写内容 |
-|---|---|
-| `PROD_HOST` | 生产服务器域名或 IP，不包含协议 |
-| `PROD_PORT` | SSH 端口，例如 `22` |
-| `PROD_USER` | 独立部署用户，应为 `deploy`，不要使用 `root` |
-| `PROD_SSH_PRIVATE_KEY` | 专用部署用户私钥的完整多行内容 |
-| `PROD_KNOWN_HOSTS` | 已人工核对指纹的 SSH known_hosts 完整行 |
+| Secret                 | 填写内容                                     |
+| ---------------------- | -------------------------------------------- |
+| `PROD_HOST`            | 生产服务器域名或 IP，不包含协议              |
+| `PROD_PORT`            | SSH 端口，例如 `22`                          |
+| `PROD_USER`            | 独立部署用户，应为 `deploy`，不要使用 `root` |
+| `PROD_SSH_PRIVATE_KEY` | 专用部署用户私钥的完整多行内容               |
+| `PROD_KNOWN_HOSTS`     | 已人工核对指纹的 SSH known_hosts 完整行      |
 
 不要添加 root 密码、数据库密码、服务器 root 私钥或个人 SSH 私钥作为部署凭据。
 

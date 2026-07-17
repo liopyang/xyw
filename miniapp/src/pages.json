@@ -1,16 +1,67 @@
 {
   "pages": [
-    { "path": "pages/login/index", "style": { "navigationBarTitleText": "登录" } },
-    { "path": "pages/home/index", "style": { "navigationBarTitleText": "首页" } },
-    { "path": "pages/orders/index", "style": { "navigationBarTitleText": "我的订单", "enablePullDownRefresh": true } },
-    { "path": "pages/order-form/index", "style": { "navigationBarTitleText": "提交订单" } },
-    { "path": "pages/order-detail/index", "style": { "navigationBarTitleText": "订单详情" } },
-    { "path": "pages/order-edit/index", "style": { "navigationBarTitleText": "编辑订单" } },
-    { "path": "pages/issues/index", "style": { "navigationBarTitleText": "我的问题", "enablePullDownRefresh": true } },
-    { "path": "pages/issue-form/index", "style": { "navigationBarTitleText": "提交问题" } },
-    { "path": "pages/issue-detail/index", "style": { "navigationBarTitleText": "问题详情" } },
-    { "path": "pages/profile/index", "style": { "navigationBarTitleText": "个人信息" } },
-    { "path": "pages/change-password/index", "style": { "navigationBarTitleText": "修改密码" } }
+    {
+      "path": "pages/home/index",
+      "style": { "navigationBarTitleText": "首页" }
+    },
+    {
+      "path": "pages/login/index",
+      "style": { "navigationBarTitleText": "登录" }
+    },
+    {
+      "path": "pages/content/detail",
+      "style": { "navigationBarTitleText": "信息详情" }
+    },
+    {
+      "path": "pages/map/index",
+      "style": { "navigationBarTitleText": "校园地图" }
+    },
+    {
+      "path": "pages/map/detail",
+      "style": { "navigationBarTitleText": "地点详情" }
+    },
+    {
+      "path": "pages/orders/index",
+      "style": {
+        "navigationBarTitleText": "我的订单",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/order-form/index",
+      "style": { "navigationBarTitleText": "提交订单" }
+    },
+    {
+      "path": "pages/order-detail/index",
+      "style": { "navigationBarTitleText": "订单详情" }
+    },
+    {
+      "path": "pages/order-edit/index",
+      "style": { "navigationBarTitleText": "编辑订单" }
+    },
+    {
+      "path": "pages/issues/index",
+      "style": {
+        "navigationBarTitleText": "我的问题",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/issue-form/index",
+      "style": { "navigationBarTitleText": "提交问题" }
+    },
+    {
+      "path": "pages/issue-detail/index",
+      "style": { "navigationBarTitleText": "问题详情" }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": { "navigationBarTitleText": "个人信息" }
+    },
+    {
+      "path": "pages/change-password/index",
+      "style": { "navigationBarTitleText": "修改密码" }
+    }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
@@ -24,7 +75,7 @@
     "backgroundColor": "#ffffff",
     "list": [
       { "pagePath": "pages/home/index", "text": "首页" },
-      { "pagePath": "pages/orders/index", "text": "订单" },
+      { "pagePath": "pages/map/index", "text": "校园地图" },
       { "pagePath": "pages/issues/index", "text": "问题" },
       { "pagePath": "pages/profile/index", "text": "我的" }
     ]

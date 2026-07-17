@@ -10,10 +10,12 @@ npm install
 npm run dev
 ```
 
-后端默认地址在 `.env` 中配置：
+本地开发默认通过 Vite 代理连接真实服务器，避免浏览器跨域：
 
 ```text
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=/api
+VITE_USE_MOCK=false
+VITE_DEV_PROXY_TARGET=https://hutbxyw.click
 ```
 
 ## 已实现

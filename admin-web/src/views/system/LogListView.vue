@@ -1,1 +1,110 @@
-<script setup lang="ts">import{onMounted,reactive,ref,watch}from'vue';import{Search}from'@element-plus/icons-vue';import{logApi}from'../../api/admin';const rows=ref<any[]>([]),total=ref(0),q=reactive({page:1,pageSize:20,module:'',keyword:''});async function load(){const r=await logApi.list(q);rows.value=r.data.records;total.value=r.data.total}watch(()=>q.module,load);onMounted(load)</script><template><div class="page"><h1 class="page-title">操作日志</h1><p class="page-desc">查看系统关键业务操作记录</p><div class="filter-bar panel"><el-select v-model="q.module" clearable placeholder="业务模块" style="width:140px"><el-option label="订单" value="ORDER"/><el-option label="代理" value="AGENT"/><el-option label="问题" value="ISSUE"/><el-option label="配置" value="CONFIG"/><el-option label="管理员" value="USER"/></el-select><el-input v-model="q.keyword" placeholder="操作人或操作描述" style="width:260px" @keyup.enter="load"/><el-button type="primary" :icon="Search" @click="load">搜索</el-button></div><div class="panel table-panel"><div class="table-tools"><b>日志列表</b></div><el-table :data="rows" stripe><el-table-column prop="operatorName" label="操作人"/><el-table-column prop="module" label="模块"/><el-table-column prop="operationType" label="操作类型"/><el-table-column prop="targetId" label="目标ID"/><el-table-column prop="operationDescription" label="操作描述" min-width="240"/><el-table-column prop="ipAddress" label="IP地址"/><el-table-column prop="createdAt" label="操作时间" width="170"/></el-table><div class="pagination"><el-pagination v-model:current-page="q.page" v-model:page-size="q.pageSize" :total="total" layout="total, sizes, prev, pager, next" @change="load"/></div></div></div></template>
+<script setup lang="ts">
+import { onMounted, reactive, ref, watch } from 'vue';
+import { Search } from '@element-plus/icons-vue';
+import { logApi } from '../../api/admin';
+const rows = ref<any[]>([]),
+  total = ref(0),
+  q = reactive({ page: 1, pageSize: 20, module: '', keyword: '' });
+async function load() {
+  const r = await logApi.list(q);
+  rows.value = r.data.records;
+  total.value = r.data.total;
+}
+watch(() => q.module, load);
+onMounted(load);
+</script>
+<template>
+  <div class="page">
+    <h1 class="page-title">操作日志</h1>
+    <p class="page-desc">查看系统关键业务操作记录</p>
+    <div class="filter-bar panel">
+      <el-select
+        v-model="q.module"
+        clearable
+        placeholder="业务模块"
+        style="width: 140px"
+      >
+        <el-option
+          label="订单"
+          value="ORDER"
+        />
+        <el-option
+          label="代理"
+          value="AGENT"
+        />
+        <el-option
+          label="问题"
+          value="ISSUE"
+        />
+        <el-option
+          label="配置"
+          value="CONFIG"
+        />
+        <el-option
+          label="管理员"
+          value="USER"
+        />
+      </el-select>
+      <el-input
+        v-model="q.keyword"
+        placeholder="操作人或操作描述"
+        style="width: 260px"
+        @keyup.enter="load"
+      />
+      <el-button
+        type="primary"
+        :icon="Search"
+        @click="load"
+      >
+        搜索
+      </el-button>
+    </div>
+    <div class="panel table-panel">
+      <div class="table-tools"><b>日志列表</b></div>
+      <el-table
+        :data="rows"
+        stripe
+      >
+        <el-table-column
+          prop="operatorName"
+          label="操作人"
+        />
+        <el-table-column
+          prop="module"
+          label="模块"
+        />
+        <el-table-column
+          prop="operationType"
+          label="操作类型"
+        />
+        <el-table-column
+          prop="targetId"
+          label="目标ID"
+        />
+        <el-table-column
+          prop="operationDescription"
+          label="操作描述"
+          min-width="240"
+        />
+        <el-table-column
+          prop="ipAddress"
+          label="IP地址"
+        />
+        <el-table-column
+          prop="createdAt"
+          label="操作时间"
+          width="170"
+        />
+      </el-table>
+      <div class="pagination">
+        <el-pagination
+          v-model:current-page="q.page"
+          v-model:page-size="q.pageSize"
+          :total="total"
+          layout="total, sizes, prev, pager, next"
+          @change="load"
+        />
+      </div>
+    </div>
+  </div>
+</template>

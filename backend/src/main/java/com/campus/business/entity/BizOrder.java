@@ -1,3 +1,28 @@
 package com.campus.business.entity;
-import com.baomidou.mybatisplus.annotation.*;import lombok.Data;import java.time.LocalDateTime;
-@Data @TableName("biz_order") public class BizOrder{@TableId(type=IdType.AUTO)private Long id;private String orderNo;private String businessType;private String customerName;private String contactPhone;private String businessNumber;private String sourceChannel;private Long agentId;private Long createdBy;private String auditStatus;private String remark;private LocalDateTime createdAt;private LocalDateTime updatedAt;@TableLogic private Integer deleted;private Long deletedBy;private LocalDateTime deletedAt;}
+
+import com.baomidou.mybatisplus.annotation.*;
+import java.time.LocalDateTime;
+import lombok.Data;
+
+@Data
+@TableName("biz_order")
+public class BizOrder {
+  @TableId(type = IdType.AUTO)
+  private Long id;
+
+  private String orderNo;
+  private String businessType;
+  private String customerName;
+  private String contactPhone;
+  private String businessNumber;
+  private String sourceChannel;
+  private Long agentId;
+  private Long createdBy;
+  private String auditStatus;
+  private String remark;
+  private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
+  @TableLogic private Integer deleted;
+  private Long deletedBy;
+  private LocalDateTime deletedAt;
+}

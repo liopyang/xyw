@@ -1,1 +1,91 @@
-<script setup lang="ts">import{computed,onMounted,reactive,ref}from'vue';import{useRoute,useRouter}from'vue-router';import{ElMessage}from'element-plus';import{agentApi}from'../../api/admin';const route=useRoute(),router=useRouter(),id=computed(()=>Number(route.params.id)||0),loading=ref(false),form=reactive({name:'',phone:'',level:'NORMAL',password:''});async function load(){if(id.value)Object.assign(form,(await agentApi.detail(id.value)).data)}async function save(){loading.value=true;try{if(id.value)await agentApi.update(id.value,form);else await agentApi.create(form);ElMessage.success('代理资料已保存');router.push('/agents')}finally{loading.value=false}}onMounted(load)</script><template><div class="page"><div class="panel agent-form"><h1 class="page-title">{{id?'编辑代理':'新增代理'}}</h1><p class="page-desc">维护代理基础资料和登录账号</p><el-form label-position="top"><el-form-item label="姓名"><el-input v-model="form.name"/></el-form-item><el-form-item label="手机号 / 登录账号"><el-input v-model="form.phone" maxlength="11"/></el-form-item><el-form-item label="代理等级"><el-select v-model="form.level"><el-option label="普通代理" value="NORMAL"/><el-option label="高级代理" value="ADVANCED"/><el-option label="校园负责人" value="CAMPUS_LEADER"/></el-select></el-form-item><el-form-item v-if="!id" label="初始密码"><el-input v-model="form.password" type="password" show-password/></el-form-item><div class="actions"><el-button @click="router.back()">取消</el-button><el-button type="primary" :loading="loading" @click="save">保存</el-button></div></el-form></div></div></template><style scoped>.agent-form{width:620px;padding:28px}.agent-form :deep(.el-select){width:100%}.actions{text-align:right}</style>
+<script setup lang="ts">
+import { computed, onMounted, reactive, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus';
+import { agentApi } from '../../api/admin';
+const route = useRoute(),
+  router = useRouter(),
+  id = computed(() => Number(route.params.id) || 0),
+  loading = ref(false),
+  form = reactive({ name: '', phone: '', level: 'NORMAL', password: '' });
+async function load() {
+  if (id.value) Object.assign(form, (await agentApi.detail(id.value)).data);
+}
+async function save() {
+  loading.value = true;
+  try {
+    if (id.value) await agentApi.update(id.value, form);
+    else await agentApi.create(form);
+    ElMessage.success('代理资料已保存');
+    router.push('/agents');
+  } finally {
+    loading.value = false;
+  }
+}
+onMounted(load);
+</script>
+<template>
+  <div class="page">
+    <div class="panel agent-form">
+      <h1 class="page-title">{{ id ? '编辑代理' : '新增代理' }}</h1>
+      <p class="page-desc">维护代理基础资料和登录账号</p>
+      <el-form label-position="top">
+        <el-form-item label="姓名"><el-input v-model="form.name" /></el-form-item>
+        <el-form-item label="手机号 / 登录账号">
+          <el-input
+            v-model="form.phone"
+            maxlength="11"
+          />
+        </el-form-item>
+        <el-form-item label="代理等级">
+          <el-select v-model="form.level">
+            <el-option
+              label="普通代理"
+              value="NORMAL"
+            />
+            <el-option
+              label="高级代理"
+              value="ADVANCED"
+            />
+            <el-option
+              label="校园负责人"
+              value="CAMPUS_LEADER"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          v-if="!id"
+          label="初始密码"
+        >
+          <el-input
+            v-model="form.password"
+            type="password"
+            show-password
+          />
+        </el-form-item>
+        <div class="actions">
+          <el-button @click="router.back()">取消</el-button>
+          <el-button
+            type="primary"
+            :loading="loading"
+            @click="save"
+          >
+            保存
+          </el-button>
+        </div>
+      </el-form>
+    </div>
+  </div>
+</template>
+<style scoped>
+.agent-form {
+  width: 620px;
+  padding: 28px;
+}
+.agent-form :deep(.el-select) {
+  width: 100%;
+}
+.actions {
+  text-align: right;
+}
+</style>
